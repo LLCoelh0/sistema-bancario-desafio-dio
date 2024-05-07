@@ -41,8 +41,11 @@ while True:
             print('Number of withdraws exceeded for today!')
 
     elif operation == 's':
-        for number in statement:
-            print(number)
+        if len(statement) == 0:
+            print('No transactions were made')
+        else:
+            for number in statement:
+                print(number)
         print(f'Balance U$ {balance:.2f}')
 
     elif operation == 'e':
