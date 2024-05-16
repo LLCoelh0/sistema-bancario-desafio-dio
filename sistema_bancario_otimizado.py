@@ -2,15 +2,19 @@ import os
 import requests
 from pprint import pprint
 
-balance = 0.0
-limit = 500
-statement = []
-number_of_withdraws = 0
-withdraw_limit = 3
-clients = {}
-agency = '0001'
-account_number = 0
-accounts = {}
+def menu():       
+    menu = '''
+    [C]reate a Client
+    [G]enerate account
+    [A]ccounts
+    [L]ist Clients
+    [D]eposit
+    [W]ithdraw
+    [S]tatement
+    [E]xit
+    Enter with a option: '''
+
+    return input(menu)
 
 def create_customer(clients):
 
@@ -28,9 +32,7 @@ def create_customer(clients):
         if len(cep) == 8:
 
             link = f'https://viacep.com.br/ws/{cep}/json/'
-
             requisicao = requests.get(link)
-
             dic_requisicao = requisicao.json()
 
             customer[cpf]['adress']['state'] = dic_requisicao['uf']
@@ -53,7 +55,7 @@ def deposit(balance, statement):
         statement.append(f'+U$ {deposit_value:.2f}')
     return balance
 
-def withdraw(limit, statement, balance, number_of_withdraws, withdraw_limit):
+def withdraw(*, limit, statement, balance, number_of_withdraws, withdraw_limit):
 
     if number_of_withdraws < withdraw_limit:
         withdraw = float(input('\n Enter with the value for Withdraw: '))
@@ -65,15 +67,19 @@ def withdraw(limit, statement, balance, number_of_withdraws, withdraw_limit):
                     number_of_withdraws += 1
                 else:
                     print('\n Not enough balance, try other value')
+                    input("\n\n Press Enter to continue...")
             else:
                 print(f'\n Withdraw limit exceeded choose a value lower than {limit}')
+                input("\n\n Press Enter to continue...")
         else:
             print('\n Enter with a valid value!')
+            input("\n\n Press Enter to continue...")
     else:
         print('\n Number of withdraws exceeded for today!')
+        input("\n\n Press Enter to continue...")
     return balance, number_of_withdraws
 
-def print_statement(balance, /, statement):
+def print_statement(balance, /, *, statement):
 
     if len(statement) == 0:
         print('\nNo transactions were made')
@@ -83,49 +89,62 @@ def print_statement(balance, /, statement):
     print(f'Balance U$ {balance:.2f}')
     input("\n\n Press Enter to continue...")
 
-def create_account(clients, agency, account_number, accounts):
-    
+def create_account(clients, agency, account_number):
+
     cpf = input('Enter with the cpf of the client: ')
-    customer = {account_number: {'agency':agency, 'cpf':cpf}}
+
     if cpf in clients:
-        account_number += 1
-        customer['account_number'] = account_number
+        return {'client':cpf, 'agency': agency, 'account_number':account_number}
     else:
         print('Client dos not exist!')
         input("\n Press Enter to continue...")
-    accounts.update(customer)
+        return None
 
-menu = '''
-[C]reate a Client
-[G]enerate account
-[A]ccounts
-[L]ist Clients
-[D]eposit
-[W]ithdraw
-[S]tatement
-[E]xit
-Enter with a option: '''
+def main():
 
-while True:
-    os.system('clear')
-    operation = input(menu).lower()
-    if operation == 'c':
-        create_customer(clients)
-    elif operation == 'g':
-        create_account(clients, agency, account_number, accounts)
-    elif operation == 'l':
-        pprint(dict(clients))
-        input("\n\n Press Enter to continue...")
-    elif operation == 'a':
-        pprint(dict(accounts))
-        input("\n\n Press Enter to continue...")
-    elif operation == 'd':
-        balance = deposit(balance, statement)
-    elif operation == 'w':
-        balance, number_of_withdraws = withdraw(limit=limit, statement=statement, balance=balance, number_of_withdraws=number_of_withdraws, withdraw_limit=withdraw_limit)
-    elif operation == 's':
-        print_statement(balance, statement=statement)
-    elif operation == 'e':
-        break
-    else:
-        print('Enter with a valid option')
+    balance = 0.0
+    limit = 500
+    statement = []
+    number_of_withdraws = 0
+    withdraw_limit = 3
+    clients = {}
+    agency = '0001'
+    account_number = 0
+    accounts = []
+
+    while True:
+        os.system('clear')
+        operation = menu().lower()
+        if operation == 'c':
+            create_customer(clients)
+
+        elif operation == 'g':
+            account_number = len(accounts)+1
+            account = create_account(clients, agency, account_number)
+            accounts.append(account)
+
+        elif operation == 'l':
+            pprint(dict(clients))
+            input("\n\n Press Enter to continue...")
+        
+        elif operation == 'a':
+            for acc in accounts:
+                print(acc)
+            input("\n\n Press Enter to continue...")
+        
+        elif operation == 'd':
+            balance = deposit(balance, statement)
+        
+        elif operation == 'w':
+            balance, number_of_withdraws = withdraw(limit=limit, statement=statement, balance=balance, number_of_withdraws=number_of_withdraws, withdraw_limit=withdraw_limit)
+        
+        elif operation == 's':
+            print_statement(balance, statement=statement)
+        
+        elif operation == 'e':
+            break
+        
+        else:
+            print('Enter with a valid option')
+
+main()
